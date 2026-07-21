@@ -15,7 +15,17 @@ npm run dev
 
 브라우저에서 `http://127.0.0.1:3000`을 엽니다.
 
-### Windows에서 더블클릭으로 실행
+### Windows에서 설치 없이 사용
+
+Windows용 포터블 EXE를 내려받아 압축을 푼 뒤 `복숭아-주문대장-*-win.exe`를 더블클릭하면 됩니다. Node.js나 npm을 설치할 필요가 없으며, 주문 데이터와 백업은 각 Windows 사용자 계정의 `AppData\\Roaming\\복숭아 주문대장` 폴더에 보관됩니다.
+
+개발자가 Windows 실행 파일을 만들 때는 다음 명령을 사용합니다. GitHub Actions의 **Build Windows portable app** 워크플로에서도 같은 EXE를 내려받을 수 있습니다.
+
+```bash
+npm run package:win
+```
+
+### Windows에서 개발용으로 실행
 
 1. [Node.js LTS](https://nodejs.org/) (22 이상)를 한 번만 설치합니다.
 2. 프로젝트 폴더의 `복숭아 주문대장 실행.bat`를 더블클릭합니다.
