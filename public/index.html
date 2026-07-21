@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>복숭아 주문대장</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <h1>복숭아 주문대장</h1>
+        <div class="header-actions"><button id="show-help" class="button secondary" type="button">사용 설명서</button><a class="button secondary" href="/api/export.csv">CSV 백업</a></div>
+      </header>
+
+      <p id="notice" class="notice" aria-live="polite"></p>
+
+      <section class="summary" aria-label="오늘 할 일">
+        <button data-filter="needsReview"><strong id="needsReview">0</strong><span>확인할 사항</span></button>
+        <button data-filter="paymentDue"><strong id="paymentDue">0</strong><span>입금 확인 필요</span></button>
+        <button data-filter="readyToShip"><strong id="readyToShip">0</strong><span>오늘 발송 필요</span></button>
+        <button data-filter="shippedToday"><strong id="shippedToday">0</strong><span>오늘 발송 완료</span></button>
+      </section>
+
+      <section class="grid">
+        <section class="panel new-order">
+          <div class="panel-heading"><h2>새 주문</h2></div>
+          <form id="order-form">
+            <label>주문자 이름<input name="customerName" placeholder="예: 이복순" /></label>
+            <label>전화번호<input name="phone" inputmode="tel" placeholder="010-1234-5678" /></label>
+            <label class="wide">배송지 주소<textarea name="address" placeholder="주소가 아직 없으면 비워둘 수 있습니다."></textarea></label>
+            <div class="items wide">
+              <div class="item-heading"><label>상품</label><button type="button" id="add-item" class="text-button">+ 상품 추가</button></div>
+              <div class="item-column-labels" aria-hidden="true"><span>등급</span><span>수량</span><span>단가</span><span></span></div>
+              <div id="item-list"></div>
+            </div>
+            <label>택배비<input name="shippingFee" type="number" min="0" step="1000" value="0" /></label>
+            <label>메모<input name="notes" placeholder="입금 예정, 요청사항 등" /></label>
+            <div class="form-actions wide"><button class="button secondary" type="submit" data-mode="draft">임시 저장</button><button class="button" type="submit" data-mode="ready">주문 등록</button></div>
+          </form>
+        </section>
+
+        <section class="panel orders-panel">
+          <div class="panel-heading"><h2 id="list-title">전체 주문</h2><button id="show-all" class="text-button">전체 보기</button></div>
+          <div id="order-list" class="order-list"></div>
+        </section>
+      </section>
+    </main>
+    <template id="item-template"><div class="item-row"><select name="grade" aria-label="등급"><option value="normal">일반</option><option value="special">특</option></select><input name="quantity" type="number" min="1" value="1" aria-label="수량" /><input name="unitPrice" type="number" min="0" step="1000" value="0" aria-label="단가" /><button type="button" class="remove-item" aria-label="상품 삭제">×</button></div></template>
+    <template id="order-template"><article class="order-card"><div class="order-card-top"><div><span class="order-number"></span><h3 class="customer-name"></h3></div><div class="order-card-right"><span class="status order-status"></span><div class="order-review"></div></div></div><p class="order-items"></p><p class="order-address"></p><div class="order-meta"></div><div class="order-review-details"></div><div class="order-actions"></div></article></template>
+    <dialog id="edit-dialog">
+      <form id="edit-form">
+        <div class="dialog-heading wide"><h2>주문 수정</h2><button type="button" id="close-edit" class="text-button">닫기</button></div>
+        <label>주문자 이름<input name="customerName" /></label>
+        <label>전화번호<input name="phone" inputmode="tel" /></label>
+        <label class="wide">배송지 주소<textarea name="address"></textarea></label>
+        <div class="items wide">
+          <div class="item-heading"><label>상품</label><button type="button" id="add-edit-item" class="text-button">+ 상품 추가</button></div>
+          <div class="item-column-labels" aria-hidden="true"><span>등급</span><span>수량</span><span>단가</span><span></span></div>
+          <div id="edit-item-list"></div>
+        </div>
+        <label>택배비<input name="shippingFee" type="number" min="0" step="1000" /></label>
+        <label>메모<input name="notes" /></label>
+        <div class="form-actions wide"><button type="button" id="cancel-edit" class="button secondary">취소</button><button class="button" type="submit">수정 저장</button></div>
+      </form>
+    </dialog>
+    <dialog id="help-dialog" class="help-dialog">
+      <div class="help-content">
+        <div class="dialog-heading"><h2>복숭아 주문대장 사용 설명서</h2><button type="button" id="close-help" class="text-button">닫기</button></div>
+        <p class="guide-intro">카카오톡 주문을 보면서, 아래 순서대로만 하시면 됩니다.</p>
+        <ol class="guide-steps">
+          <li><strong>새 주문을 적습니다.</strong><span>주문자 이름, 전화번호, 주소를 적고 일반·특과 상자 수를 고릅니다. 가격과 택배비는 기본값이 자동으로 들어갑니다.</span></li>
+          <li><strong>정보가 모두 있으면 ‘주문 등록’을 누릅니다.</strong><span>이름·전화번호·주소·상품이 모두 있어야 등록됩니다. 아직 모르는 내용이 있으면 ‘임시 저장’을 누르세요.</span></li>
+          <li><strong>임시 저장한 주문은 ‘확인할 사항’에서 마무리합니다.</strong><span>주소나 상품을 확인한 뒤 주문 카드의 ‘수정’을 눌러 고치고, ‘주문 등록’을 누릅니다.</span></li>
+          <li><strong>입금이 확인되면 ‘입금 완료’를 누릅니다.</strong><span>상단의 ‘입금 확인 필요’를 누르면 아직 입금 확인이 필요한 주문만 볼 수 있습니다.</span></li>
+          <li><strong>포장과 발송을 차례로 처리합니다.</strong><span>‘포장 준비’ → ‘운송장 입력’ → ‘발송 완료’ 순서로 누르세요. 오늘 보낼 주문은 ‘오늘 발송 필요’에서 모아 볼 수 있습니다.</span></li>
+          <li><strong>바꿀 내용이 생기면 ‘확인 필요’를 체크합니다.</strong><span>예: ‘특 2상자 추가’, ‘주소 변경’. 확인할 일이 끝나면 체크를 다시 풀면 됩니다.</span></li>
+        </ol>
+        <p class="guide-tip"><strong>백업하는 방법</strong> : 오른쪽 위의 ‘CSV 백업’을 누르면 주문 목록 파일이 컴퓨터에 저장됩니다. 중요한 시기에는 한 번씩 따로 보관해 두세요.</p>
+        <div class="form-actions"><button type="button" id="help-done" class="button">알겠습니다</button></div>
+      </div>
+    </dialog>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
