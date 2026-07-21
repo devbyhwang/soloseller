@@ -1,12 +1,16 @@
 {
   "name": "peach-order-ledger",
   "version": "0.1.0",
+  "description": "복숭아 주문을 기록하고 발송 상태를 관리하는 로컬 주문대장",
   "private": true,
   "type": "module",
+  "main": "electron/main.js",
   "scripts": {
     "dev": "node --watch server.js",
     "start": "node server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "desktop": "electron .",
+    "package:win": "electron-builder --win portable"
   },
   "engines": {
     "node": ">=22"
@@ -14,5 +18,39 @@
   "dependencies": {
     "better-sqlite3": "^13.0.1",
     "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "electron": "^43.1.1",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.soloseller.peach-order-ledger",
+    "productName": "복숭아 주문대장",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "public/**/*",
+      "lib/**/*",
+      "electron/**/*",
+      "server.js",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "portable": {
+      "artifactName": "복숭아-주문대장-${version}-win.${ext}"
+    }
   }
 }
