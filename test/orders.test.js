@@ -39,6 +39,11 @@ test('입금 완료 전에는 포장 준비로 바꿀 수 없다', () => {
   assert.equal(result.ok, false)
 })
 
+test('발송 완료 주문은 포장 준비로 되돌릴 수 없다', () => {
+  const result = canTransition({ recordStatus: 'ready', paymentStatus: 'paid', shippingStatus: 'shipped' }, 'prepare')
+  assert.equal(result.ok, false)
+})
+
 test('임시 저장 및 확인 필요 체크 주문은 확인할 사항에 표시된다', async () => {
   const store = createStore(':memory:')
   const draft = await store.createOrder({ items: [] })
@@ -106,4 +111,24 @@ test('로컬 주문 변경은 하루 단위 자동 백업을 만든다', async (
   assert.equal(backups.some((file) => /^peach-orders-\d{4}-\d{2}-\d{2}\.db$/.test(file)), true)
   store.close()
   fs.rmSync(directory, { recursive: true, force: true })
+})
+
+test('백업 실패 후에도 저장된 주문은 성공으로 처리한다', async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'peach-ledger-test-'))
+  const backupTarget = path.join(directory, 'backups', `peach-orders-${dateInSeoul()}.db`)
+  fs.mkdirSync(backupTarget, { recursive: true })
+  const store = createStore(path.join(directory, 'orders.db'))
+  const originalConsoleError = console.error
+  const errors = []
+  console.error = (message) => errors.push(message)
+
+  try {
+    await store.createOrder({ items: [] })
+    assert.equal(store.listOrders().length, 1)
+    assert.match(errors[0], /주문 데이터 백업에 실패했습니다/)
+  } finally {
+    console.error = originalConsoleError
+    store.close()
+    fs.rmSync(directory, { recursive: true, force: true })
+  }
 })
